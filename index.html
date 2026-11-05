@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRITICAL SYSTEM ALERT</title>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Courier New', Courier, monospace;
+    }
+    body, html {
+        width: 100%;
+        height: 100%;
+        background-color: #000;
+        color: #0f0;
+        overflow: hidden;
+        user-select: none;
+    }
+    #matrix-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        opacity: 0.35;
+    }
+    .flash-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 2;
+        pointer-events: none;
+        animation: strobe 0.4s infinite alternate;
+    }
+    @keyframes strobe {
+        0% { background-color: rgba(255, 0, 0, 0.35); }
+        100% { background-color: rgba(0, 0, 0, 0.9); }
+    }
+    .container {
+        position: relative;
+        z-index: 3;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        padding: 20px;
+        text-align: center;
+    }
+    .warning-box {
+        border: 4px solid #ff0000;
+        background: rgba(10, 0, 0, 0.9);
+        padding: 25px 20px;
+        border-radius: 12px;
+        box-shadow: 0 0 40px #ff0000, inset 0 0 20px #ff0000;
+        max-width: 95%;
+        animation: glitch-box 0.15s infinite;
+    }
+    .alert-title {
+        color: #ff0000;
+        font-size: 1.6rem;
+        font-weight: 900;
+        text-shadow: 0 0 10px #ff0000;
+        margin-bottom: 15px;
+        text-transform: uppercase;
+        line-height: 1.3;
+    }
+    .sub-title {
+        color: #ffcc00;
+        font-size: 1.1rem;
+        font-weight: bold;
+        margin-bottom: 20px;
+        letter-spacing: 1px;
+    }
+    .hacker-msg {
+        color: #00ffcc;
+        font-size: 1.3rem;
+        font-weight: bold;
+        margin: 20px 0;
+        min-height: 35px;
+        text-shadow: 0 0 8px #00ffcc;
+    }
+    .final-title {
+        color: #ff0033;
+        font-size: 1.8rem;
+        font-weight: 900;
+        text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000;
+        margin-top: 25px;
+        display: none;
+        animation: pulse 0.6s infinite alternate;
+        line-height: 1.3;
+    }
+    .final-sub {
+        color: #ffffff;
+        font-size: 1.3rem;
+        font-weight: bold;
+        margin-top: 12px;
+        display: none;
+        text-shadow: 0 0 10px #ffffff;
+    }
+    @keyframes pulse {
+        0% { transform: scale(0.95); }
+        100% { transform: scale(1.05); }
+    }
+    @keyframes glitch-box {
+        0% { transform: translate(0); }
+        25% { transform: translate(-3px, 2px); }
+        50% { transform: translate(3px, -2px); }
+        75% { transform: translate(-2px, -3px); }
+        100% { transform: translate(2px, 3px); }
+    }
+    .start-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: #000;
+        z-index: 10;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #ff0000;
+        font-size: 1.3rem;
+        font-weight: bold;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        animation: pulse 1s infinite alternate;
+    }
+</style>
+</head>
+<body>
+
+<div class="start-overlay" id="startBtn">
+    ▶ TAP ANYWHERE TO START SYSTEM SCAN
+</div>
+
+<canvas id="matrix-canvas"></canvas>
+<div class="flash-overlay"></div>
+
+<div class="container">
+    <div class="warning-box">
+        <div class="alert-title">⚠️ WARNING! YOUR MOBILE HAS BEEN HACKED!</div>
+        <div class="sub-title">ALL YOUR DATA IS UNDER SURVEILLANCE!</div>
+        <div class="hacker-msg" id="hackerMsg"></div>
+        <div class="final-title" id="finalTitle">☠️ NEVER MESS WITH OFFICIAL MEHRAJ ☠️</div>
+        <div class="final-sub" id="finalSub">OFFICIAL MEHRAJ IS WATCHING! 😂🔥</div>
+    </div>
+</div>
+
+<script>
+    // Matrix Background Effect
+    const canvas = document.getElementById('matrix-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ01010101#$%-+*';
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    const drops = Array.from({ length: columns }).fill(1);
+
+    function drawMatrix() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#0f0';
+        ctx.font = fontSize + 'px monospace';
+
+        for (let i = 0; i < drops.length; i++) {
+            const text = chars.charAt(Math.floor(Math.random() * chars.length));
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                drops[i] = 0;
+            }
+            drops[i]++;
+        }
+    }
+    setInterval(drawMatrix, 33);
+
+    // Synthesized Alarm Sound & Glitch Audio (Web Audio API)
+    let audioCtx;
+    function playAlarmSound() {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Siren Oscillator
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        
+        let freq = 450;
+        let goingUp = true;
+        
+        setInterval(() => {
+            if (goingUp) {
+                freq += 35;
+                if (freq > 950) goingUp = false;
+            } else {
+                freq -= 35;
+                if (freq < 450) goingUp = true;
+            }
+            if(audioCtx && osc) {
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            }
+        }, 30);
+
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+
+        // Glitch Noise Generator
+        setInterval(() => {
+            const noiseBuffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.08, audioCtx.sampleRate);
+            const output = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < noiseBuffer.length; i++) {
+                output[i] = Math.random() * 2 - 1;
+            }
+            const whiteNoise = audioCtx.createBufferSource();
+            whiteNoise.buffer = noiseBuffer;
+            const noiseGain = audioCtx.createGain();
+            noiseGain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            whiteNoise.connect(noiseGain);
+            noiseGain.connect(audioCtx.destination);
+            whiteNoise.start();
+        }, 1000);
+    }
+
+    // Typewriter Text Effect
+    function typeText(elementId, text, delay, callback) {
+        let i = 0;
+        const elem = document.getElementById(elementId);
+        const timer = setInterval(() => {
+            elem.innerHTML += text.charAt(i);
+            i++;
+            if (i >= text.length) {
+                clearInterval(timer);
+                if (callback) callback();
+            }
+        }, delay);
+    }
+
+    // Trigger Prank Sequence
+    document.getElementById('startBtn').addEventListener('click', function() {
+        this.style.display = 'none';
+        playAlarmSound();
+
+        setTimeout(() => {
+            typeText('hackerMsg', '"YOU HAVE BEEN TRAPPED!"', 80, () => {
+                setTimeout(() => {
+                    document.getElementById('finalTitle').style.display = 'block';
+                    document.getElementById('finalSub').style.display = 'block';
+                }, 1000);
+            });
+        }, 1200);
+    });
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRITICAL SYSTEM ALERT</title>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Courier New', Courier, monospace;
+    }
+    body, html {
+        width: 100%;
+        height: 100%;
+        background-color: #000;
+        color: #0f0;
+        overflow: hidden;
+        user-select: none;
+    }
+    #matrix-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        opacity: 0.35;
+    }
+    .flash-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 2;
+        pointer-events: none;
+        animation: strobe 0.4s infinite alternate;
+    }
+    @keyframes strobe {
+        0% { background-color: rgba(255, 0, 0, 0.35); }
+        100% { background-color: rgba(0, 0, 0, 0.9); }
+    }
+    .container {
+        position: relative;
+        z-index: 3;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        padding: 20px;
+        text-align: center;
+    }
+    .warning-box {
+        border: 4px solid #ff0000;
+        background: rgba(10, 0, 0, 0.9);
+        padding: 25px 20px;
+        border-radius: 12px;
+        box-shadow: 0 0 40px #ff0000, inset 0 0 20px #ff0000;
+        max-width: 95%;
+        animation: glitch-box 0.15s infinite;
+    }
+    .alert-title {
+        color: #ff0000;
+        font-size: 1.6rem;
+        font-weight: 900;
+        text-shadow: 0 0 10px #ff0000;
+        margin-bottom: 15px;
+        text-transform: uppercase;
+        line-height: 1.3;
+    }
+    .sub-title {
+        color: #ffcc00;
+        font-size: 1.1rem;
+        font-weight: bold;
+        margin-bottom: 20px;
+        letter-spacing: 1px;
+    }
+    .hacker-msg {
+        color: #00ffcc;
+        font-size: 1.3rem;
+        font-weight: bold;
+        margin: 20px 0;
+        min-height: 35px;
+        text-shadow: 0 0 8px #00ffcc;
+    }
+    .final-title {
+        color: #ff0033;
+        font-size: 1.8rem;
+        font-weight: 900;
+        text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000;
+        margin-top: 25px;
+        display: none;
+        animation: pulse 0.6s infinite alternate;
+        line-height: 1.3;
+    }
+    .final-sub {
+        color: #ffffff;
+        font-size: 1.3rem;
+        font-weight: bold;
+        margin-top: 12px;
+        display: none;
+        text-shadow: 0 0 10px #ffffff;
+    }
+    @keyframes pulse {
+        0% { transform: scale(0.95); }
+        100% { transform: scale(1.05); }
+    }
+    @keyframes glitch-box {
+        0% { transform: translate(0); }
+        25% { transform: translate(-3px, 2px); }
+        50% { transform: translate(3px, -2px); }
+        75% { transform: translate(-2px, -3px); }
+        100% { transform: translate(2px, 3px); }
+    }
+    .start-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: #000;
+        z-index: 10;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #ff0000;
+        font-size: 1.3rem;
+        font-weight: bold;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        animation: pulse 1s infinite alternate;
+    }
+</style>
+</head>
+<body>
+
+<div class="start-overlay" id="startBtn">
+    ▶ TAP ANYWHERE TO START SYSTEM SCAN
+</div>
+
+<canvas id="matrix-canvas"></canvas>
+<div class="flash-overlay"></div>
+
+<div class="container">
+    <div class="warning-box">
+        <div class="alert-title">⚠️ WARNING! YOUR MOBILE HAS BEEN HACKED!</div>
+        <div class="sub-title">ALL YOUR DATA IS UNDER SURVEILLANCE!</div>
+        <div class="hacker-msg" id="hackerMsg"></div>
+        <div class="final-title" id="finalTitle">☠️ NEVER MESS WITH OFFICIAL MEHRAJ ☠️</div>
+        <div class="final-sub" id="finalSub">OFFICIAL MEHRAJ IS WATCHING! 😂🔥</div>
+    </div>
+</div>
+
+<script>
+    // Matrix Background Effect
+    const canvas = document.getElementById('matrix-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ01010101#$%-+*';
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    const drops = Array.from({ length: columns }).fill(1);
+
+    function drawMatrix() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#0f0';
+        ctx.font = fontSize + 'px monospace';
+
+        for (let i = 0; i < drops.length; i++) {
+            const text = chars.charAt(Math.floor(Math.random() * chars.length));
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                drops[i] = 0;
+            }
+            drops[i]++;
+        }
+    }
+    setInterval(drawMatrix, 33);
+
+    // Synthesized Alarm Sound & Glitch Audio (Web Audio API)
+    let audioCtx;
+    function playAlarmSound() {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Siren Oscillator
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        
+        let freq = 450;
+        let goingUp = true;
+        
+        setInterval(() => {
+            if (goingUp) {
+                freq += 35;
+                if (freq > 950) goingUp = false;
+            } else {
+                freq -= 35;
+                if (freq < 450) goingUp = true;
+            }
+            if(audioCtx && osc) {
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            }
+        }, 30);
+
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+
+        // Glitch Noise Generator
+        setInterval(() => {
+            const noiseBuffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.08, audioCtx.sampleRate);
+            const output = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < noiseBuffer.length; i++) {
+                output[i] = Math.random() * 2 - 1;
+            }
+            const whiteNoise = audioCtx.createBufferSource();
+            whiteNoise.buffer = noiseBuffer;
+            const noiseGain = audioCtx.createGain();
+            noiseGain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            whiteNoise.connect(noiseGain);
+            noiseGain.connect(audioCtx.destination);
+            whiteNoise.start();
+        }, 1000);
+    }
+
+    // Typewriter Text Effect
+    function typeText(elementId, text, delay, callback) {
+        let i = 0;
+        const elem = document.getElementById(elementId);
+        const timer = setInterval(() => {
+            elem.innerHTML += text.charAt(i);
+            i++;
+            if (i >= text.length) {
+                clearInterval(timer);
+                if (callback) callback();
+            }
+        }, delay);
+    }
+
+    // Trigger Prank Sequence
+    document.getElementById('startBtn').addEventListener('click', function() {
+        this.style.display = 'none';
+        playAlarmSound();
+
+        setTimeout(() => {
+            typeText('hackerMsg', '"YOU HAVE BEEN TRAPPED!"', 80, () => {
+                setTimeout(() => {
+                    document.getElementById('finalTitle').style.display = 'block';
+                    document.getElementById('finalSub').style.display = 'block';
+                }, 1000);
+            });
+        }, 1200);
+    });
+</script>
+</body>
+</html>
